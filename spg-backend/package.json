@@ -1,0 +1,22 @@
+{
+  "name": "spotifyplayistgenerator",
+  "version": "1.0.0",
+  "description": "Automated Playlist Generator for Spotify",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alejandroidepaz/Spotify-Playlist-Generator.git"
+  },
+  "author": "Alejandro De Paz",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/alejandroidepaz/Spotify-Playlist-Generator/issues"
+  },
+  "homepage": "https://github.com/alejandroidepaz/Spotify-Playlist-Generator#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
