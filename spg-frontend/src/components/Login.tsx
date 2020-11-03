@@ -12,7 +12,7 @@ const LoginForm = () =>{
     return (
         <Jumbotron>
             <img src={logo} className="App-logo" alt="logo" />
-            <h1>Spotify VibeCheck</h1>
+            <h1>Spotify Moods</h1>
             <p>
             Welcome! Log in to your Spotify account to instantly categorize your 
             songs into organized playlists based on their vibe. 

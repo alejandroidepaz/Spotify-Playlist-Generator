@@ -86,15 +86,22 @@ app.get('/callback', function(req, res) {
 
         // use the access token to access the Spotify Web API
         request.get(options, function(error, response, body) {
-          console.log(body);
+          if (!error){
+                    // we can also pass the token to the browser to make requests from there
+            res.redirect('http://localhost:3000/profile?' +
+            querystring.stringify({
+              access_token: access_token,
+              refresh_token: refresh_token,
+              name: body.display_name,
+              image: body.images.length > 0 ? body.images[0].url : null,
+              profileLink: "spotify" in body.external_urls ? body.external_urls.spotify : null
+            }));
+          } else{
+
+            res.sendStatus(500);
+          }
         });
 
-        // we can also pass the token to the browser to make requests from there
-        res.redirect('http://localhost:3000/#' +
-          querystring.stringify({
-            access_token: access_token,
-            refresh_token: refresh_token
-          }));
       } else {
         res.redirect('/#' +
           querystring.stringify({
