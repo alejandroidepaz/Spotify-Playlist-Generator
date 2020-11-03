@@ -7,7 +7,7 @@ import { faSpotify } from '@fortawesome/free-brands-svg-icons';
 import Jumbotron from 'react-bootstrap/Jumbotron';
 import logo from '../assets/logo.svg';
 
-const LoginForm = () =>{
+const LoginForm = () => {
 
     return (
         <Jumbotron>
