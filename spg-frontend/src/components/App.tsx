@@ -5,23 +5,26 @@ import { Switch, Route } from "react-router-dom";
 import ScrollToTop from "./ScrollToTop";
 import NavigationBar from './Nav';
 import Home from './Home';
+import Error from './Error';
 import ProfilePreview from './ProfilePreview';
 
 const Router = () => {
-    return (
-        <ScrollToTop>
-            <Switch>
-                <Route exact path="/profile" component={ProfilePreview}></Route>
-                <Route exact path="/" component={Home}></Route>
-            </Switch>
-        </ScrollToTop>
-    );
-  };
+  return (
+    <ScrollToTop>
+      <Switch>
+        <Route exact path="/profile" component={ProfilePreview}></Route>
+        <Route exact path="/error" component={Error}></Route>
+        <Route exact path="/" component={Home}></Route>
+      </Switch>
+    </ScrollToTop>
+  );
+}
+
 function App() {
   return (
     <div className="App">
-        <NavigationBar />
-        <Router />
+      <NavigationBar />
+      <Router />
     </div>
   );
 }
