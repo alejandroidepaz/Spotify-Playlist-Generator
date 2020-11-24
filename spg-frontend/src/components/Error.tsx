@@ -4,7 +4,7 @@ import 'bootstrap/dist/css/bootstrap.css';
 
 function Error() {
   return (
-    <div className="App">
+    <div className="Page">
       <div className="jumbotron">
         <h1 className="display-1">Oops!</h1>
         <h1 className="display-4">We encountered an unexpected error.</h1>

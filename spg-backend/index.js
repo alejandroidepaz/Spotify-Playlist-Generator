@@ -56,8 +56,7 @@ app.get('/callback', function(req, res) {
   var storedState = req.cookies ? req.cookies[stateKey] : null;
 
   if (state === null || state !== storedState) {
-    // TODO: redirect user to error page
-    res.redirect('/#' +
+    res.redirect('http://localhost:3000/?' +
       querystring.stringify({
         error: 'state_mismatch'
       }));
@@ -102,15 +101,16 @@ app.get('/callback', function(req, res) {
               profileLink: "spotify" in body.external_urls ? body.external_urls.spotify : null
             }));
           } else {
-            // TODO: redirect user to error page if request didn't work
-            res.sendStatus(500);
+            res.redirect('http://localhost:3000/?' +
+              querystring.stringify({
+                error: 'state_mismatch'
+              }));
           }
         });
       } else {
-        // TODO: redirect user to error page if request didn't work
-        res.redirect('/#' +
+        res.redirect('http://localhost:3000/?' +
           querystring.stringify({
-            error: 'invalid_token'
+            error: 'state_mismatch'
           }));
       }
     });

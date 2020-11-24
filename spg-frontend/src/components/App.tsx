@@ -4,8 +4,10 @@ import 'bootstrap/dist/css/bootstrap.css';
 import { Switch, Route } from "react-router-dom";
 import ScrollToTop from "./ScrollToTop";
 import NavigationBar from './Nav';
-import Home from './Home';
+import Login from './Login';
 import Error from './Error';
+import About from './About';
+import Donate from './Donate';
 import ProfilePreview from './ProfilePreview';
 
 const Router = () => {
@@ -14,7 +16,9 @@ const Router = () => {
       <Switch>
         <Route exact path="/profile" component={ProfilePreview}></Route>
         <Route exact path="/error" component={Error}></Route>
-        <Route exact path="/" component={Home}></Route>
+        <Route exact path="/about" component={About}></Route>
+        <Route exact path="/donate" component={Donate}></Route>
+        <Route exact path="/" component={Login}></Route>
       </Switch>
     </ScrollToTop>
   );
