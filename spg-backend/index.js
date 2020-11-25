@@ -10,6 +10,8 @@ const { generateRandomString } = require('./utils');
 const { stateKey, redirect_uri } = require('./constants');
 const { client_id, client_secret } = require('./credentials');
 
+const { fetchAllSavedSongs } = require('./services/songs');
+
 const app = express();
 
 // general app use statements
@@ -160,136 +162,6 @@ app.post('/user_library', async (req, res) => {
     res.status(200).json({ error: null, playlists: response.playlists });
   }
 });
-
-// Fetch a page of the user's saved songs from Spotify
-async function fetchSavedSongs(access_token, refresh_token, url) {
-  let songs = [];
-  
-  var options = {
-    method: 'GET',
-    headers: { 'Authorization': 'Bearer ' + access_token }
-  };
-
-  // fetch result from url provided
-  let res = await fetch(url, options);
-  let body = await res.json();
-
-  // format response into simple list of song names and id's
-  body.items && body.items.forEach((song) => {
-    let track = song.track;
-    songs.push({ id: track.id, name: track.name });
-  });
-
-  // return list of songs and url to next page of results (if exists)
-  return { songs, next: body.next };
-}
-
-// Fetch all of a user's saved songs up to 1000
-async function fetchAllSavedSongs(access_token, refresh_token) {
-  var songs = [];
-  var page = 0;
-  var maxPage = 1;
-  
-  // specify url for first page of results
-  let next = 'https://api.spotify.com/v1/me/tracks?limit=50';
-
-  // start timer
-  var hrstart = process.hrtime()
-
-  // fetch pages of results until we have fetched all results or exceed max pages
-  while (next != null && page < maxPage) {
-      res = await fetchSavedSongs(access_token, refresh_token, next);
-
-      // get audio features for songs fetched
-      //let songsWithFeatures = await getAudioFeatures(access_token, refresh_token, res.songs);
-      let categorizedSongs = await getAudioFeatures(access_token, refresh_token, res.songs);
-
-      // add songs to result set
-      //songs = songs.concat(songsWithFeatures);
-      songs.push(categorizedSongs)
-      // increment number of pages and set the url to the next page
-      page++;
-      next = res.next;
-  }
-
-  // stop timer
-  var hrend = process.hrtime(hrstart);
-
-  // log # of songs and elapsed time for testing
-  console.info(`Songs fetched: ${songs.length}`);
-  console.info('Execution time: %ds %dms', hrend[0], hrend[1] / 1000000)
-  
-  // merge all sub playlists
-  var finalPlaylists = {}
-  songs.forEach((playlist)=>{
-    Object.keys(playlist).forEach((key) => {
-      key in finalPlaylists ? finalPlaylists[key].concat(playlist[key]) : finalPlaylists[key] = playlist[key]
-    })
-  })
-  //console.info("FINAL PLAYLIST: ", finalPlaylists)
-  // return list of songs with audio features
-  return {playlists: finalPlaylists};
-
-}
-
-// assign each song to a respective category based on audio feature metrics
-function assignToCategories(audioFeatures, songs){
-
-  let i = 0;
-  let categories = ['danceability', 'energy', 'mode', 'acousticness', 'instrumentalness', 'valence', 'liveness'];
-  let categorizedSongs = {}
-
-  audioFeatures.forEach((features) => {
-    
-    // determine category with max value, and add this song to that respective category
-    let currSong = songs[i] 
-    let maxCategoryVal = -1
-    let maxCategory = null 
-    categories.forEach((c) => {
-      if (features[c] > maxCategoryVal) maxCategory = c; 
-    });
-
-    currSong["tempo"] = features["tempo"]
-
-    // Only create playlists necessary for songs that are in this batch
-    if (maxCategory in categorizedSongs){
-      categorizedSongs[maxCategory].push(currSong)
-    } else{
-      categorizedSongs[maxCategory] = [currSong]
-    }
-    i++;
-  });
-
-  return categorizedSongs
-
-}
-
-// Fetch audio features of songs from Spotify by id
-async function getAudioFeatures(access_token, refresh_token, songs) {
-  // assemble list of id's from list of songs passed
-  let ids = "";
-  songs.forEach((song) => {
-    ids = ids + (ids.length > 0 ? "," : "") + song.id;
-  });
-
-  // inject list of id's into url
-  let url = `https://api.spotify.com/v1/audio-features/?ids=${ids}`
-  let options = {
-    method: 'GET',
-    headers: { 'Authorization': 'Bearer ' + access_token }
-  };
-
-  // fetch result from Spotify
-  let res = await fetch(url, options);
-  let body = await res.json();
-  
-  var categorizedSongs = null;
-  
-  if (body.audio_features) categorizedSongs = assignToCategories(body.audio_features, songs)
-
-  // return playlists comprised on categorized songs
-  return categorizedSongs;
-}
 
 // Error handling 
 app.use(function (err, req, res, next) {
