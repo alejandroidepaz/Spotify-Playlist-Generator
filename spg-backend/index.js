@@ -1,7 +1,5 @@
-const fetch = require('node-fetch');
 const express = require('express');
 const cors = require('cors');
-var request = require('request');
 var bodyParser = require("body-parser");
 var querystring = require('querystring');
 var cookieParser = require('cookie-parser');
@@ -10,6 +8,7 @@ const { generateRandomString } = require('./utils');
 const { stateKey, redirect_uri } = require('./constants');
 const { client_id, client_secret } = require('./credentials');
 
+const { getAccessToken } = require('./services/login');
 const { fetchAllSavedSongs } = require('./services/songs');
 
 const app = express();
@@ -49,7 +48,7 @@ app.get('/login', function(req, res) {
 
 
 // Callback for after Spotify Authorization
-app.get('/callback', function(req, res) {
+app.get('/callback', async (req, res) => {
 
   // request refresh and access tokens
   // after checking the state parameter
@@ -63,90 +62,50 @@ app.get('/callback', function(req, res) {
         error: 'state_mismatch'
       }));
   } else {
+    // clear cookies and fetch tokens for user
     res.clearCookie(stateKey);
-    var authOptions = {
-      url: 'https://accounts.spotify.com/api/token',
-      form: {
-        code: code,
-        redirect_uri: redirect_uri,
-        grant_type: 'authorization_code'
-      },
-      headers: {
-        'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64'))
-      },
-      json: true
-    };
+    const { error, access_token, refresh_token } = await getAccessToken(code);
 
-    // request authorization tokens using user's auth code
-    request.post(authOptions, function(error, response, body) {
-      if (!error && response.statusCode === 200) {
+    if (error) {
+      res.redirect('http://localhost:3000/?' +
+        querystring.stringify({
+          error: 'testing'
+        }));
+    }
+    else {
 
-        var access_token = body.access_token,
-            refresh_token = body.refresh_token;
-
-        var options = {
-          url: 'https://api.spotify.com/v1/me',
-          headers: { 'Authorization': 'Bearer ' + access_token },
-          json: true
-        };
-
-        // fetch user's info including name, profile picture, etc.
-        request.get(options, function(error, response, body) {
-          if (!error && response.statusCode === 200) {
-            // redirect user back to frontend profile page
-            res.redirect('http://localhost:3000/profile?' +
-            querystring.stringify({
-              access_token: access_token,
-              refresh_token: refresh_token,
-              name: body.display_name,
-              image: body.images.length > 0 ? body.images[0].url : null,
-              profileLink: "spotify" in body.external_urls ? body.external_urls.spotify : null
-            }));
-          } else {
-            res.redirect('http://localhost:3000/?' +
-              querystring.stringify({
-                error: 'state_mismatch'
-              }));
-          }
-        });
-      } else {
-        res.redirect('http://localhost:3000/?' +
-          querystring.stringify({
-            error: 'state_mismatch'
-          }));
-      }
-    });
+    }
   }
 });
 
 // Refresh Spotify authentication token
 // TODO: figure out when to call this endpoint
-app.get('/refresh_token', (req, res) => {
+// app.get('/refresh_token', (req, res) => {
 
-  // requesting access token from refresh token
-  var refresh_token = req.query.refresh_token;
-  var authOptions = {
-    url: 'https://accounts.spotify.com/api/token',
-    headers: { 'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64')) },
-    form: {
-      grant_type: 'refresh_token',
-      refresh_token: refresh_token
-    },
-    json: true
-  };
+//   // requesting access token from refresh token
+//   var refresh_token = req.query.refresh_token;
+//   var authOptions = {
+//     url: 'https://accounts.spotify.com/api/token',
+//     headers: { 'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64')) },
+//     form: {
+//       grant_type: 'refresh_token',
+//       refresh_token: refresh_token
+//     },
+//     json: true
+//   };
 
-  request.post(authOptions, function(error, response, body) {
-    if (!error && response.statusCode === 200) {
-      var access_token = body.access_token;
-      res.send({
-        'access_token': access_token
-      });
-    }
-    else {
-      // TODO: figure out how to handle this error
-    }
-  });
-});
+//   request.post(authOptions, function(error, response, body) {
+//     if (!error && response.statusCode === 200) {
+//       var access_token = body.access_token;
+//       res.send({
+//         'access_token': access_token
+//       });
+//     }
+//     else {
+//       // TODO: figure out how to handle this error
+//     }
+//   });
+// });
 
 // Fetch the user's saved songs from Spotify
 app.post('/user_library', async (req, res) => {
