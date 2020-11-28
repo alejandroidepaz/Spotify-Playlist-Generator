@@ -4,11 +4,11 @@ var bodyParser = require("body-parser");
 var querystring = require('querystring');
 var cookieParser = require('cookie-parser');
 
+const { client_id } = require('./credentials');
 const { generateRandomString } = require('./utils');
 const { stateKey, redirect_uri } = require('./constants');
-const { client_id, client_secret } = require('./credentials');
 
-const { getAccessToken } = require('./services/login');
+const { getAccessToken, getUser } = require('./services/login');
 const { fetchAllSavedSongs } = require('./services/songs');
 
 const app = express();
@@ -69,11 +69,23 @@ app.get('/callback', async (req, res) => {
     if (error) {
       res.redirect('http://localhost:3000/?' +
         querystring.stringify({
-          error: 'testing'
+          error: 'access_token_reject'
         }));
     }
     else {
+      // fetch user's basic profile information
+      const { error, name, image, profileLink } = await getUser(access_token, refresh_token);
 
+      if (error) {
+        res.redirect('http://localhost:3000/?' +
+        querystring.stringify({
+          error: 'user_fetch_failure'
+        }));
+      }
+      else {
+        res.redirect('http://localhost:3000/profile?' +
+        querystring.stringify({access_token, refresh_token, name, image, profileLink}));
+      }
     }
   }
 });

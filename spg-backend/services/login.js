@@ -20,122 +20,50 @@ async function getAccessToken(code) {
     };
 
     // request authorization tokens using user's auth code
-    let authRes = await fetch(url, options);
+    let res = await fetch(url, options);
 
-    // set error if token fetch fails
-    if (authRes.status == 400) {
-      result.error = authRes.statusText;
+    // return tokens if request is successful
+    if (res.status == 200) {
+      let body = await res.json();
+      result.access_token = body.access_token;
+      result.refresh_token = body.refresh_token;
     }
-    // if fetch doesn't fail, send tokens back
+    // if request fails, return error
     else {
-      let authBody = await authRes.json();
-      result.access_token = authBody.access_token;
-      result.refresh_token = authBody.refresh_token;
+      result.error = authRes.statusText;
     }
 
     return result;
 }
 
-// request.post(authOptions, function(error, response, body) {
-//   if (!error && response.statusCode === 200) {
+async function getUser(access_token, refresh_token) {
+  let result = { error: null, name: null, image: null, profileLink: null };
 
-//     var access_token = body.access_token,
-//         refresh_token = body.refresh_token;
+  let url = 'https://api.spotify.com/v1/me';
+  let options = {
+    method: 'GET',
+    headers: { 'Authorization': `Bearer ${access_token}` },
+  };
 
-//     var options = {
-//       url: 'https://api.spotify.com/v1/me',
-//       headers: { 'Authorization': 'Bearer ' + access_token },
-//       json: true
-//     };
+  // fetch data about user with their access token
+  let res = await fetch(url, options);
 
-    // fetch user's info including name, profile picture, etc.
-    // request.get(options, function(error, response, body) {
-    //   if (!error && response.statusCode === 200) {
-    //     // redirect user back to frontend profile page
-    //     res.redirect('http://localhost:3000/profile?' +
-    //     querystring.stringify({
-    //       access_token: access_token,
-    //       refresh_token: refresh_token,
-    //       name: body.display_name,
-    //       image: body.images.length > 0 ? body.images[0].url : null,
-    //       profileLink: "spotify" in body.external_urls ? body.external_urls.spotify : null
-    //     }));
-    //   } else {
-    //     res.redirect('http://localhost:3000/?' +
-    //       querystring.stringify({
-    //         error: 'state_mismatch'
-    //       }));
-    //   }
-    // });
-//   } else {
-//     res.redirect('http://localhost:3000/?' +
-//       querystring.stringify({
-//         error: 'state_mismatch'
-//       }));
-//   }
-// });
+  // return user data if request is sucessful
+  if (res.status == 200) {
+    let body = await res.json();
+    result.name = body.display_name;
+    result.image = body.images.length > 0 ? body.images[0].url : null;
+    result.profileLink = "spotify" in body.external_urls ? body.external_urls.spotify : null;
+  }
+  // if not return error
+  else {
+    result.error = res.statusText;
+  }
 
-//   let url = 'https://accounts.spotify.com/api/token';
-//   let options = {
-//     method: 'POST',
-//     form: JSON.stringify({
-//       code: code,
-//       redirect_uri: redirect_uri,
-//       grant_type: 'authorization_code'
-//     }),
-//     headers: {
-//       'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64'))
-//     },
-//     json: true
-//   };
-
-//   let res = await fetch(url, options);
-//   // let body = await res.json();
-
-//   console.info(res);
-
-//   // if (body.error) {
-//   //   result.error = body.error;
-//   // }
-//   // else {
-//   //   result.access_token = body.access_token;
-//   //   result.refresh_token = body.refresh_token;
-//   // }
-
-//   return result;
-// }
-
-// async function getUserInfo(access_token, refresh_token) {
-//   let result = {
-//     error: null,
-//     name: null,
-//     id: null,
-//     image: null,
-//     profileLink: null
-//   };
-
-//   let url = 'https://api.spotify.com/v1/me';
-//   var options = {
-//     headers: { 'Authorization': 'Bearer ' + access_token },
-//     json: true
-//   };
-
-//   let res = await fetch(url, options);
-//   let body = await res.json();
-
-//   if (body.error) {
-//     result.error = body.error;
-//   }
-//   else {
-//     result.name = body.display_name,
-//     result.id = body.id;
-//     result.image = body.images.length > 0 ? body.images[0].url : null;
-//     result.profileLink = "spotify" in body.external_urls ? body.external_urls.spotify : null;
-//   }
-
-//   return result;
-// }
+  return result;
+}
 
 module.exports = {
   getAccessToken,
+  getUser,
 }
