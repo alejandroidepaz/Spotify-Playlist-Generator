@@ -37,7 +37,7 @@ async function getAccessToken(code) {
 }
 
 async function getUser(access_token, refresh_token) {
-  let result = { error: null, name: null, image: null, profileLink: null };
+  let result = { error: null, name: null, image: null, userId: null, profileLink: null };
 
   let url = 'https://api.spotify.com/v1/me';
   let options = {
@@ -51,6 +51,7 @@ async function getUser(access_token, refresh_token) {
   // return user data if request is sucessful
   if (res.status == 200) {
     let body = await res.json();
+    result.userId = body.id;
     result.name = body.display_name;
     result.image = body.images.length > 0 ? body.images[0].url : null;
     result.profileLink = "spotify" in body.external_urls ? body.external_urls.spotify : null;

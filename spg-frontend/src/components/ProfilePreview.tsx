@@ -13,15 +13,25 @@ interface Props {
     params: Credentials
 }
 
+interface Track {
+    name: String,
+    uri: String,
+    id: String,
+    tempo: Number
+}
+
 const ProfilePreview = (props) =>{
     const params = new URLSearchParams(props.location.search);
+    const userId = params.get('userId');
     const imageLink = params.get('image');
     const displayName = params.get('name');
     const profileLink = params.get('profileLink');
     const accessToken = params.get('access_token');
     const refreshToken = params.get('refresh_token');
 
-    const [playlists, getPlaylists] = useState({})
+    const [playlists, getPlaylists] = useState({
+        "liveness": new Array<Track>()
+    })
 
     useEffect(()=>{
 
@@ -66,7 +76,31 @@ const ProfilePreview = (props) =>{
                         )
                     })}
                 </div>
-                <Button>Generate Playlists!</Button>    
+                <Button onClick={()=> {
+                    let uris = playlists["liveness"].map((song) => {
+                        return song.uri;
+                    });
+
+                    let body = {
+                        "user_id": userId,
+                        "access_token": accessToken,
+                        "refresh_token": refreshToken,
+                        "uris" : uris
+                    }
+        
+                    let payload : any = {
+                        method: 'POST',
+                        headers: {
+                        'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(body),
+                    };
+
+                    fetch('http://localhost:8000/playlist', payload)
+                    .then(res => res.json())
+                    .then(data => console.info(data))
+                    .catch(err => console.error(err));
+                }}>Generate Playlists!</Button>    
             </div>      
         </div>
     );

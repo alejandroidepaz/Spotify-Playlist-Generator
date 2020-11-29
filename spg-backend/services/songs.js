@@ -17,7 +17,7 @@ async function fetchSavedSongs(access_token, refresh_token, url) {
   // format response into simple list of song names and id's
   body.items && body.items.forEach((song) => {
     let track = song.track;
-    songs.push({ id: track.id, name: track.name });
+    songs.push({ id: track.id, name: track.name, uri: track.uri });
   });
 
   // return list of songs and url to next page of results (if exists)

@@ -8,6 +8,7 @@ const { client_id } = require('./credentials');
 const { generateRandomString } = require('./utils');
 const { stateKey, redirect_uri } = require('./constants');
 
+const { savePlaylist, addTracks } = require('./services/playlist');
 const { getAccessToken, getUser } = require('./services/login');
 const { fetchAllSavedSongs } = require('./services/songs');
 
@@ -33,7 +34,7 @@ app.get('/login', function(req, res) {
   res.cookie(stateKey, state);
 
   // declare scopes that allow us to read and write to user's saved songs
-  var scope = 'user-library-read user-library-modify';
+  var scope = 'user-library-read user-library-modify playlist-modify-private';
 
   // redirect to Spotify authentication page
   res.redirect('https://accounts.spotify.com/authorize?' +
@@ -74,7 +75,7 @@ app.get('/callback', async (req, res) => {
     }
     else {
       // fetch user's basic profile information
-      const { error, name, image, profileLink } = await getUser(access_token, refresh_token);
+      const { error, name, userId, image, profileLink } = await getUser(access_token, refresh_token);
 
       if (error) {
         res.redirect('http://localhost:3000/?' +
@@ -84,7 +85,7 @@ app.get('/callback', async (req, res) => {
       }
       else {
         res.redirect('http://localhost:3000/profile?' +
-        querystring.stringify({access_token, refresh_token, name, image, profileLink}));
+        querystring.stringify({access_token, refresh_token, name, image, profileLink, userId}));
       }
     }
   }
@@ -118,6 +119,32 @@ app.get('/callback', async (req, res) => {
 //     }
 //   });
 // });
+
+// create a playlist for user with track uri's provided
+app.post('/playlist', async (req, res) => {
+  let track_uris = req.body.uris;
+  let user_id = req.body.user_id;
+  let access_token = req.body.access_token;
+  let refresh_token = req.body.refresh_token;
+
+  // create new playlist for user
+  let response = await savePlaylist(access_token, refresh_token, user_id);
+
+  if (response.error) {
+    res.status(500).send({ error: response.error });
+  }
+  else {
+    // add tracks to user's playlist
+    let id = response.playlist.id;
+    response = await addTracks(access_token, refresh_token, id, track_uris);
+    if (response.error) {
+      res.status(500).send({ error: response.error})
+    }
+    else {
+      res.status(200);
+    }
+  }
+});
 
 // Fetch the user's saved songs from Spotify
 app.post('/user_library', async (req, res) => {
