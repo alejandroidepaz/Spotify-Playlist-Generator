@@ -26,15 +26,16 @@ async function getAudioFeatures(access_token, refresh_token, songs) {
 function weeder(songs, features, size) {
   let result = [];
 
-  let baseline = 0.5, acceptanceThreshold = 0.25, deviationThreshold = 0.10;
+  let baseline = 0.5, acceptanceThreshold = 0.15, deviationThreshold = 0.10;
   let prefs = {
-    "liveness": 0.75,
-    "dancibility": 0.25,
-    "energy": 0.50
+    "danceability": 0.75,
+    "energy": 0.35,
+    "valence": 0.8
   }
 
   for (let i = 0; i < songs.length; i++) {
     let song  = songs[i];
+    let featureSet = features[i];
 
     // assume song fits criteria
     let fits = true;
@@ -43,8 +44,9 @@ function weeder(songs, features, size) {
       let val = prefs[key];
       // check if a preference is modified enough to evaluate
       if ((val > baseline + deviationThreshold) || (val < baseline - deviationThreshold)) {
+
         // check if preference fits our filter criteria
-        if (!(features[key] >= (val - acceptanceThreshold)) && (features[key] <= (val + acceptanceThreshold))) {
+        if ((featureSet[key] > (val + acceptanceThreshold)) || (featureSet[key] < (val - acceptanceThreshold))) {
           fits = false;
         }
       }
@@ -52,13 +54,11 @@ function weeder(songs, features, size) {
 
     if (fits) {
       // if song fits criteria, add it to playlist
-      result.push({ name: song.name, id: song.id });
+      result.push({ name: song.name, id: song.id, uri: song.uri });
   
       // break loop and return playlist if we reach desired size
       if (result.length >= size) {
-        console.info("found max...");
         return result;
-        // break;
       }
     }
   }

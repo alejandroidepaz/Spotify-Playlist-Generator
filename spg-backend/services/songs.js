@@ -31,7 +31,7 @@ async function fetchAllSavedSongs(access_token, refresh_token) {
   var songs = [];
   var features = [];
   var page = 0;
-  var maxPage = 4;
+  var maxPage = 10;
   
   // specify url for first page of results
   let next = 'https://api.spotify.com/v1/me/tracks?limit=50';
@@ -54,9 +54,8 @@ async function fetchAllSavedSongs(access_token, refresh_token) {
       next = res.next;
   }
 
-
   // TODO: remove this from prefetch function
-  let playlist = await generatePlaylist(access_token, refresh_token, songs, features, 10, null);
+  let playlist = await generatePlaylist(access_token, refresh_token, songs, features, 30, null);
 
   // stop timer
   // var hrend = process.hrtime(hrstart);
@@ -66,7 +65,7 @@ async function fetchAllSavedSongs(access_token, refresh_token) {
   // console.info('Execution time: %ds %dms', hrend[0], hrend[1] / 1000000)
   
  
-  return {playlists: { "liveness": []}}
+  return {playlists: { "liveness": playlist}}
 }
 
 module.exports = {
