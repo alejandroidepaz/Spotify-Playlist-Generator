@@ -1,36 +1,5 @@
 const fetch = require('node-fetch');
 
-// assign each song to a respective category based on audio feature metrics
-function assignToCategories(audioFeatures, songs) {
-
-  let i = 0;
-  let categories = ['danceability', 'energy', 'mode', 'acousticness', 'instrumentalness', 'valence', 'liveness'];
-  let categorizedSongs = {}
-
-  audioFeatures.forEach((features) => {
-    
-    // determine category with max value, and add this song to that respective category
-    let currSong = songs[i] 
-    let maxCategoryVal = -1
-    let maxCategory = null 
-    categories.forEach((c) => {
-      if (features[c] > maxCategoryVal) maxCategory = c; 
-    });
-
-    currSong["tempo"] = features["tempo"]
-
-    // Only create playlists necessary for songs that are in this batch
-    if (maxCategory in categorizedSongs){
-      categorizedSongs[maxCategory].push(currSong)
-    } else{
-      categorizedSongs[maxCategory] = [currSong]
-    }
-    i++;
-  });
-
-  return categorizedSongs
-
-}
 
 // Fetch audio features of songs from Spotify by id
 async function getAudioFeatures(access_token, refresh_token, songs) {
@@ -51,14 +20,53 @@ async function getAudioFeatures(access_token, refresh_token, songs) {
   let res = await fetch(url, options);
   let body = await res.json();
   
-  var categorizedSongs = null;
-  
-  if (body.audio_features) categorizedSongs = assignToCategories(body.audio_features, songs)
+  return body.audio_features;
+}
 
-  // return playlists comprised on categorized songs
-  return categorizedSongs;
+function weeder(songs, features, size) {
+  let result = [];
+
+  let baseline = 0.5, acceptanceThreshold = 0.25, deviationThreshold = 0.10;
+  let prefs = {
+    "liveness": 0.75,
+    "dancibility": 0.25,
+    "energy": 0.50
+  }
+
+  for (let i = 0; i < songs.length; i++) {
+    let song  = songs[i];
+
+    // assume song fits criteria
+    let fits = true;
+
+    Object.keys(prefs).forEach((key) => {
+      let val = prefs[key];
+      // check if a preference is modified enough to evaluate
+      if ((val > baseline + deviationThreshold) || (val < baseline - deviationThreshold)) {
+        // check if preference fits our filter criteria
+        if (!(features[key] >= (val - acceptanceThreshold)) && (features[key] <= (val + acceptanceThreshold))) {
+          fits = false;
+        }
+      }
+    })
+
+    if (fits) {
+      // if song fits criteria, add it to playlist
+      result.push({ name: song.name, id: song.id });
+  
+      // break loop and return playlist if we reach desired size
+      if (result.length >= size) {
+        console.info("found max...");
+        return result;
+        // break;
+      }
+    }
+  }
+
+  return result;
 }
 
 module.exports = {
+  weeder,
   getAudioFeatures,
 }
