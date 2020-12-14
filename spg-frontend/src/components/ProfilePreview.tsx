@@ -1,33 +1,41 @@
-import React, {useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.css';
-
-import Slider from 'rc-slider';
-import '../styling/slider.css';
-
+import Select from 'react-select';
+import makeAnimated from 'react-select/animated';
 import Button from 'react-bootstrap/Button';
 import { useHistory } from 'react-router-dom';
+import { Slider } from '@material-ui/core';
+
+import { genres } from './genres';
+
+interface DropdownItem {
+  value: String,
+  label: String
+}
 
 interface Credentials {
-    access_token: String, 
-    refresh_token: String
+  access_token: String,
+  refresh_token: String
 }
 
 interface Props {
-    params: Credentials
+  params: Credentials
 }
 
 interface Track {
-    name: String,
-    uri: String,
-    id: String,
-    tempo: Number
+  name: String,
+  uri: String,
+  id: String,
+  tempo: Number
 }
 
 function log(value) {
   console.log(value); //eslint-disable-line
 }
 
-const ProfilePreview = (props) =>{
+const animatedComponents = makeAnimated();
+
+const ProfilePreview = (props) => {
     const params = new URLSearchParams(props.location.search);
     const userId = params.get('userId');
     const imageLink = params.get('image');
@@ -45,7 +53,12 @@ const ProfilePreview = (props) =>{
 
     const [playlists, getPlaylists] = useState({
         "liveness": new Array<Track>()
-    })
+    });
+
+    const [ genreOptions, setGenreOptions ] = useState<Array<DropdownItem>>([]);
+    const [ genreSelection, setGenreSelection ] = useState<Array<String>>([]);
+
+    console.info(genreSelection);
 
     // useEffect(()=>{
 
@@ -66,6 +79,13 @@ const ProfilePreview = (props) =>{
         
     // }, [])
 
+    // populate list of genres for dropdown
+    let genreDropdownItems : DropdownItem[] = [];
+    genres.genres.forEach((x) => {
+      let i : DropdownItem = { value: x, label: x };
+      genreDropdownItems.push(i);
+    });
+
     const history = useHistory();
 
     return (
@@ -77,7 +97,27 @@ const ProfilePreview = (props) =>{
           </div>
           <div style={{ textAlign: 'center', marginBottom: 30 }}>
             <h1> Welcome, {displayName}!</h1>
-            <h3>Use the sliders below to pick the perfect mood for your next playlist.</h3>
+            <h3>Use the options below to pick the perfect mood for your next playlist.</h3>
+          </div>
+          <div style={{ width: '40vw', marginLeft: 'auto', marginRight: 'auto', marginBottom: 30 }}>  
+            <h4 style={{ textAlign: 'center' }}>Genres</h4>
+            <Select
+              isMulti
+              onChange={(selection) => {
+                let g : Array<String> = [];
+                selection.forEach((x) => {
+                  g.push(x.value);
+                })
+                setGenreSelection(g);
+              }}
+              options={genreDropdownItems}
+              closeMenuOnSelect={false}
+              components={animatedComponents}
+              className="basic-multi-select"
+              classNamePrefix="select" />
+          </div>
+          <div>
+            <h4 style={{ textAlign: 'center' }}>Audio Features</h4>
           </div>
           <div style={{ display: 'flex', flexDirection: 'row', width: '80vw', alignSelf: 'center', justifyContent: 'space-around'}}>
             <p>Energy</p>
@@ -87,11 +127,36 @@ const ProfilePreview = (props) =>{
             <p>Liveness</p>
           </div>
           <div style={{ display: 'flex', flexDirection: 'row', width: '80vw', alignSelf: 'center', height: 400, justifyContent: 'space-around', border: '3px solid black' }}>
-            <Slider onChange={(val)=>{setEnergy(val)}} startPoint={50} defaultValue={50} vertical={true} trackStyle={{ width: '5vw' }} railStyle={{ width: '5vw' }} style={{ width: '5vw' }} />
-            <Slider onChange={(val)=>{setDanceability(val)}} startPoint={50} defaultValue={50} vertical={true} trackStyle={{ width: '5vw' }} railStyle={{ width: '5vw' }} style={{ width: '5vw' }} />
-            <Slider onChange={(val)=>{setMode(val)}} startPoint={50} defaultValue={50} vertical={true} trackStyle={{ width: '5vw' }} railStyle={{ width: '5vw' }} style={{ width: '5vw' }} />
-            <Slider onChange={(val)=>{setValence(val)}} startPoint={50} defaultValue={50} vertical={true} trackStyle={{ width: '5vw' }} railStyle={{ width: '5vw' }} style={{ width: '5vw' }} />
-            <Slider onChange={(val)=>{setLiveness(val)}} startPoint={50} defaultValue={50} vertical={true} trackStyle={{ width: '5vw' }} railStyle={{ width: '5vw' }} style={{ width: '5vw' }} />
+            <Slider
+              orientation="vertical"
+              aria-labelledby="continuous-slider"
+              min={0}
+              value={energy}
+              max={100} />
+            <Slider
+              orientation="vertical"
+              aria-labelledby="continuous-slider"
+              min={0}
+              value={danceability}
+              max={100} />
+            <Slider
+              orientation="vertical"
+              aria-labelledby="continuous-slider"
+              min={0}
+              value={mode}
+              max={100} />
+            <Slider
+              orientation="vertical"
+              aria-labelledby="continuous-slider"
+              min={0}
+              value={valence}
+              max={100} />
+            <Slider
+              orientation="vertical"
+              aria-labelledby="continuous-slider"
+              min={0}
+              value={liveness}
+              max={100} />
           </div>
           <div>
           <div className="profile">
