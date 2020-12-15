@@ -1,6 +1,5 @@
 const fetch = require('node-fetch');
 const { getAudioFeatures } = require('./features');
-const { generatePlaylist } = require('./playlist');
 
 // Fetch a page of the user's saved songs from Spotify
 async function fetchSavedSongs(access_token, refresh_token, url) {
@@ -55,7 +54,7 @@ async function fetchAllSavedSongs(access_token, refresh_token) {
   }
 
   // TODO: remove this from prefetch function
-  let playlist = await generatePlaylist(access_token, refresh_token, songs, features, 30, null);
+  // let playlist = await previewPlaylist(access_token, refresh_token, songs, features, 30, null);
 
   // stop timer
   // var hrend = process.hrtime(hrstart);
@@ -65,7 +64,7 @@ async function fetchAllSavedSongs(access_token, refresh_token) {
   // console.info('Execution time: %ds %dms', hrend[0], hrend[1] / 1000000)
   
  
-  return {playlists: { "liveness": playlist}}
+  return {prefetchSongs: songs, prefetchFeatures: features}
 }
 
 module.exports = {

@@ -11,11 +11,12 @@ const { stateKey, redirect_uri } = require('./constants');
 const { savePlaylist, addTracks } = require('./services/playlist');
 const { getAccessToken, getUser } = require('./services/login');
 const { fetchAllSavedSongs } = require('./services/songs');
+const { previewPlaylist } = require('./services/playlist');
 
 const app = express();
 
 // general app use statements
-app.use(bodyParser.json())
+app.use(bodyParser.json({limit: '50mb'}))
    .use(cors())
    .use(cookieParser());
 
@@ -123,10 +124,17 @@ app.get('/callback', async (req, res) => {
 // create a playlist for user with track uri's provided
 app.post('/playlist', async (req, res) => {
   let track_uris = req.body.uris;
+  let track_features = req.body.features;
   let user_id = req.body.user_id;
   let access_token = req.body.access_token;
   let refresh_token = req.body.refresh_token;
 
+  const playlistSongs = await previewPlaylist(access_token, refresh_token, track_uris, track_features, 30, null);
+  console.info("Final Playlist Tracks:", playlistSongs);
+  if (playlistSongs.length == 0){
+    res.status(200);
+    return {"response":"We couldn't find any songs to add!"}
+  }
   // create new playlist for user
   let response = await savePlaylist(access_token, refresh_token, user_id);
 
@@ -136,7 +144,9 @@ app.post('/playlist', async (req, res) => {
   else {
     // add tracks to user's playlist
     let id = response.playlist.id;
-    response = await addTracks(access_token, refresh_token, id, track_uris);
+    const uris = playlistSongs.map(song => song.uri);
+    
+    response = await addTracks(access_token, refresh_token, id, uris);
     if (response.error) {
       res.status(500).send({ error: response.error})
     }
@@ -157,7 +167,7 @@ app.post('/user_library', async (req, res) => {
     res.status(500).send({ error });
   }
   else {
-    res.status(200).json({ error: null, playlists: response.playlists });
+    res.status(200).json({ error: null, prefetchSongs: response.prefetchSongs, prefetchFeatures: response.prefetchFeatures });
   }
 });
 

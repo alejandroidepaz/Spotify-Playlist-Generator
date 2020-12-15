@@ -44,34 +44,34 @@ async function addTracks(access_token, refresh_token, playlist_id, tracks) {
     return { error: null }
   }
   else {
-    return { error: body.statusCode }
+    return { error: 500}
   }
 }
 
-function generatePlaylist(access_token, refresh_token, prefetchSongs, prefetchFeatures, size, next) {
+async function previewPlaylist(access_token, refresh_token, prefetchSongs, prefetchFeatures, size, next) {
   // try to generate playlist from prefetched songs
   let playlist = weeder(prefetchSongs, prefetchFeatures, size);
 
   // if playlist isn't long enough after checking prefetched songs, fetch songs and try to add
   // them to the playlist until it's long enough, or we run out of saved songs
-  // while (playlist.length < size && next != null) {
-  //   // fetch songs with audio features
-  //   let res = await fetchSavedSongs(access_token, refresh_token, next);
-  //   let features = await getAudioFeatures(access_token, refresh_token, res.songs);
+  while (playlist.length < size && next != null) {
+    // fetch songs with audio features
+    let res = await fetchSavedSongs(access_token, refresh_token, next);
+    let features = await getAudioFeatures(access_token, refresh_token, res.songs);
 
-  //   // add songs to playlist if they fit criteria
-  //   playlist = playlist + weeder(res.songs, features, size);
+    // add songs to playlist if they fit criteria
+    playlist = playlist + weeder(res.songs, features, size);
 
-  //   // increment number of pages and set the url to the next page
-  //   page++;
-  //   next = res.next;
-  // }
+    // increment number of pages and set the url to the next page
+    page++;
+    next = res.next;
+  }
 
   return playlist;
 }
 
 module.exports = {
   savePlaylist,
-  generatePlaylist,
+  previewPlaylist,
   addTracks,
 }

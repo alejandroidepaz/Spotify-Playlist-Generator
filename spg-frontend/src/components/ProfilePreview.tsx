@@ -29,8 +29,11 @@ const ProfilePreview = (props) =>{
     const accessToken = params.get('access_token');
     const refreshToken = params.get('refresh_token');
 
-    const [playlists, getPlaylists] = useState({
-        "liveness": new Array<Track>()
+    const [prefetchSongs, updateSongs] = useState({
+        "songs": new Array<Track>()
+    })
+    const [prefetchFeatures, updateFeatures] = useState({
+        "features": []
     })
 
     useEffect(()=>{
@@ -47,7 +50,10 @@ const ProfilePreview = (props) =>{
         // Fetch user songs
         fetch("http://localhost:8000/user_library", payload)
         .then(res => res.json())
-        .then(data => getPlaylists(data.playlists))
+        .then(data => {
+            updateSongs({"songs":data.prefetchSongs});
+            updateFeatures({"features":data.prefetchFeatures});
+        })
         .catch(err => console.info(err));
         
     }, [])
@@ -65,27 +71,26 @@ const ProfilePreview = (props) =>{
             <div>
                 <div>
                     <h4>Playlists Preview</h4>
-                    {Object.keys(playlists).map((key) =>{
+                    {prefetchSongs["songs"].map((song) =>{
                         
+
                         return (
-                            playlists[key].map((song)=>{
-                                return (
-                                    <p key={song.id}>{song.name}</p>
-                                )
-                            })
+                            <p>{song.name}</p>
                         )
+
                     })}
                 </div>
                 <Button onClick={()=> {
-                    let uris = playlists["liveness"].map((song) => {
-                        return song.uri;
-                    });
+                    // let uris = prefetchSongs["songs"].map((song) => {
+                    //     return song.uri;
+                    // });
 
                     let body = {
                         "user_id": userId,
                         "access_token": accessToken,
                         "refresh_token": refreshToken,
-                        "uris" : uris
+                        "uris" : prefetchSongs["songs"],
+                        "features": prefetchFeatures["features"]
                     }
         
                     let payload : any = {
