@@ -4,9 +4,19 @@ import Select from 'react-select';
 import makeAnimated from 'react-select/animated';
 import Button from 'react-bootstrap/Button';
 import { useHistory } from 'react-router-dom';
+import { withStyles, makeStyles } from '@material-ui/core/styles';
 import { Slider } from '@material-ui/core';
 
 import { genres } from './genres';
+
+const useStyles = makeStyles((theme) => ({
+  root: {
+    width: 300 + theme.spacing(3) * 2,
+  },
+  margin: {
+    height: theme.spacing(3),
+  },
+}));
 
 interface DropdownItem {
   value: String,
@@ -58,7 +68,9 @@ const ProfilePreview = (props) => {
     const [ genreOptions, setGenreOptions ] = useState<Array<DropdownItem>>([]);
     const [ genreSelection, setGenreSelection ] = useState<Array<String>>([]);
 
-    console.info(genreSelection);
+    // console.info(genreSelection);
+
+    const classes = useStyles();
 
     // useEffect(()=>{
 
@@ -127,35 +139,55 @@ const ProfilePreview = (props) => {
             <p>Liveness</p>
           </div>
           <div style={{ display: 'flex', flexDirection: 'row', width: '80vw', alignSelf: 'center', height: 400, justifyContent: 'space-around', border: '3px solid black' }}>
-            <Slider
+            <CustomSlider
               orientation="vertical"
               aria-labelledby="continuous-slider"
               min={0}
               value={energy}
+              onChange={(event, value)=>{
+                // typecast to Number with +
+                setEnergy(+value);
+              }}
               max={100} />
-            <Slider
+            <CustomSlider
               orientation="vertical"
               aria-labelledby="continuous-slider"
               min={0}
               value={danceability}
+              onChange={(event, value)=>{
+                // typecast to Number with +
+                setDanceability(+value);
+              }}
               max={100} />
-            <Slider
+            <CustomSlider
               orientation="vertical"
               aria-labelledby="continuous-slider"
               min={0}
               value={mode}
+              onChange={(event, value)=>{
+                // typecast to Number with +
+                setMode(+value);
+              }}
               max={100} />
-            <Slider
+            <CustomSlider
               orientation="vertical"
               aria-labelledby="continuous-slider"
               min={0}
               value={valence}
+              onChange={(event, value)=>{
+                // typecast to Number with +
+                setValence(+value);
+              }}
               max={100} />
-            <Slider
+            <CustomSlider
               orientation="vertical"
               aria-labelledby="continuous-slider"
               min={0}
               value={liveness}
+              onChange={(event, value)=>{
+                // typecast to Number with +
+                setLiveness(+value);
+              }}
               max={100} />
           </div>
           <div>
@@ -207,5 +239,53 @@ const ProfilePreview = (props) => {
       </div>
     );
 }
+
+const CustomSlider = withStyles({
+  root: {
+    color: '#52af77',
+    height: 8,
+    '&$vertical': {
+      width: 8
+    }
+  },
+  thumb: {
+    height: 24,
+    width: 24,
+    // backgroundColor: '#fff',
+    border: '2px solid currentColor',
+    marginTop: -8,
+    marginLeft: -12,
+    '&:focus, &:hover': {
+      boxShadow: '0px 0px 0px 8px rgba(84, 199, 97, 0.16)'
+    },
+    '&$active': {
+      boxShadow: '0px 0px 0px 12px rgba(84, 199, 97, 0.16)'
+    }
+  },
+  active: {},
+  valueLabel: {
+    left: 'calc(-50% + 4px)'
+  },
+  track: {
+    height: 8,
+    borderRadius: 4
+  },
+  rail: {
+    height: 8,
+    borderRadius: 4
+  },
+  vertical: {
+    '& $rail': {
+      width: 8
+    },
+    '& $track': {
+      width: 8
+    },
+    '& $thumb': {
+      marginLeft: -8,
+      marginBottom: -11
+    }
+  }
+})(Slider)
 
 export default ProfilePreview;
